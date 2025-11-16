@@ -26,7 +26,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
                 u
             FROM
                 Usuario u
-            WHERE 
+            JOIN 
+                u.perfil p
+            WHERE
                 u.email = :email
             AND
                 u.senha = :senha

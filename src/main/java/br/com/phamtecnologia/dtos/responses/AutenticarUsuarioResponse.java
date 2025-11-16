@@ -1,4 +1,14 @@
 package br.com.phamtecnologia.dtos.responses;
 
-public record AutenticarUsuarioResponse() {
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public record AutenticarUsuarioResponse(
+        UUID id,
+        String nome,
+        String email,
+        String perfil,
+        LocalDateTime dataHoraCriacao,
+        String accessToken
+) {
 }

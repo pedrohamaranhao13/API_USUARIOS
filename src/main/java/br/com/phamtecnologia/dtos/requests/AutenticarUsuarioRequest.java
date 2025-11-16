@@ -1,4 +1,7 @@
 package br.com.phamtecnologia.dtos.requests;
 
-public record AutenticarUsuarioRequest() {
+public record AutenticarUsuarioRequest(
+        String email,
+        String senha
+) {
 }
