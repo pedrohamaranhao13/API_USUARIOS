@@ -7,6 +7,8 @@ import br.com.phamtecnologia.repositories.PerfilRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PerfilService {
 
@@ -24,6 +26,18 @@ public class PerfilService {
           perfil.getId(),
           perfil.getNome()
         );
+    }
+
+    public List<PerfilResponse> consultar() {
+
+        var lista =  perfilRepository.findAll();
+
+        return lista.stream()
+                .map(p -> new PerfilResponse(
+                        p.getId(),
+                        p.getNome()
+                ))
+                .toList();
     }
 
 }
