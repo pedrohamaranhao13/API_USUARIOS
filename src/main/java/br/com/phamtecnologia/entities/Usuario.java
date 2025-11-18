@@ -28,6 +28,9 @@ public class Usuario {
     @Column(name = "senha", length = 255, nullable = false)
     private String senha;
 
+    @Column(name = "foto", length = 255, nullable = true)
+    private String foto;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "dataHoraCriacao", nullable = false)
     private LocalDateTime dataHoraCriacao;

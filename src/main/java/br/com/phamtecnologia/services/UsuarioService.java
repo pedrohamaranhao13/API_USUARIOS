@@ -17,8 +17,14 @@ import br.com.phamtecnologia.repositories.PerfilRepository;
 import br.com.phamtecnologia.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class UsuarioService {
@@ -38,7 +44,7 @@ public class UsuarioService {
     @Autowired
     private EmailComponent emailComponent;
 
-    public CriarUsuarioResponse criar(CriarUsuarioRequest request) {
+    public CriarUsuarioResponse criar(CriarUsuarioRequest request, MultipartFile foto) {
 
         if(usuarioRepository.findByEmail(request.email()) != null) {
             throw new EmailJaCadastradoException();
@@ -57,6 +63,24 @@ public class UsuarioService {
         usuario.setDataHoraCriacao(LocalDateTime.now());
         usuario.setPerfil(perfil);
 
+        if (foto != null && !foto.isEmpty()) {
+            String destino = "C:/uploads/usuarios/";
+            File dir = new File(destino);
+            if (!dir.exists()) dir.mkdirs();
+
+            String nomeArquivo = UUID.randomUUID() + "_" + foto.getOriginalFilename();
+            Path caminho = Path.of(destino + nomeArquivo);
+
+            try {
+                Files.write(caminho, foto.getBytes());
+                usuario.setFoto(nomeArquivo);
+            } catch (IOException e) {
+                throw new RuntimeException("Erro ao salvar a foto do usuário.", e);
+            }
+
+            usuario.setFoto(nomeArquivo);
+        }
+
         usuarioRepository.save(usuario);
 
         return new CriarUsuarioResponse(
@@ -65,7 +89,8 @@ public class UsuarioService {
                 usuario.getTelefone(),
                 usuario.getEmail(),
                 usuario.getPerfil().getNome(),
-                usuario.getDataHoraCriacao()
+                usuario.getDataHoraCriacao(),
+                usuario.getFoto()
         );
     }
 

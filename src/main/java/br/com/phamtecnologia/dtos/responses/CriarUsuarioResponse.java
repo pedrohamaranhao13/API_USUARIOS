@@ -9,6 +9,7 @@ public record CriarUsuarioResponse(
         String telefone,
         String email,
         String perfil,
-        LocalDateTime dataHoraCriacao
+        LocalDateTime dataHoraCriacao,
+        String foto
 ) {
 }

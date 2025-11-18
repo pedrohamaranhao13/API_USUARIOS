@@ -8,11 +8,13 @@ import br.com.phamtecnologia.exceptions.EmailJaCadastradoException;
 import br.com.phamtecnologia.exceptions.EmailNaoEncontrado;
 import br.com.phamtecnologia.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 
 @RestController
 @RequestMapping("/api/v1/usuario")
@@ -21,11 +23,17 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @PostMapping("cadastrar")
-    public ResponseEntity<?> criarUsuario(@RequestBody CriarUsuarioRequest request) {
+    @PostMapping(value = "cadastrar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> criarUsuario(
+            @RequestPart("request") String requestJson,
+            @RequestPart(name = "foto", required = false)MultipartFile foto) {
 
         try {
-            return ResponseEntity.ok().body(usuarioService.criar(request));
+
+            ObjectMapper mapper = new ObjectMapper();
+            CriarUsuarioRequest request = mapper.readValue(requestJson, CriarUsuarioRequest.class);
+
+            return ResponseEntity.ok().body(usuarioService.criar(request, foto));
         }
         catch (EmailJaCadastradoException e) {
             return ResponseEntity.status(409).body(e.getMessage());
