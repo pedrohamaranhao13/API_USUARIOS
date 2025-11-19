@@ -39,4 +39,7 @@ public class Usuario {
     @JoinColumn(name = "perfil_id", nullable = false)
     private Perfil perfil;
 
+    @Column(name = "ativo", nullable = false)
+    private Boolean ativo;
+
 }

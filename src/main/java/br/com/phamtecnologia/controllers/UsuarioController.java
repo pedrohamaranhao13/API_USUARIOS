@@ -63,6 +63,22 @@ public class UsuarioController {
         }
     }
 
+    @DeleteMapping("{id}")
+    public ResponseEntity<?> deletar(@PathVariable UUID id) {
+        try {
+            usuarioService.deletar(id);
+            return ResponseEntity.ok("Usuário deletado com sucesso");
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> consultar() {
+        return ResponseEntity.ok(usuarioService.consultar());
+    }
+
 
     @PostMapping("autenticar")
     public ResponseEntity<?> autenticarUsuario(@RequestBody AutenticarUsuarioRequest request) {

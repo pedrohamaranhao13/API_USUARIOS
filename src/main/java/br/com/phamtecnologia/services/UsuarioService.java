@@ -8,15 +8,10 @@ import br.com.phamtecnologia.dtos.requests.AtualizarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.AutenticarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.CriarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.RecuperarSenhaRequest;
-import br.com.phamtecnologia.dtos.responses.AtualizarUsuarioResponse;
-import br.com.phamtecnologia.dtos.responses.AutenticarUsuarioResponse;
-import br.com.phamtecnologia.dtos.responses.CriarUsuarioResponse;
-import br.com.phamtecnologia.dtos.responses.RecuperarSenhaResponse;
+import br.com.phamtecnologia.dtos.responses.*;
 import br.com.phamtecnologia.entities.Perfil;
 import br.com.phamtecnologia.entities.Usuario;
-import br.com.phamtecnologia.exceptions.AcessoNegadoException;
-import br.com.phamtecnologia.exceptions.EmailJaCadastradoException;
-import br.com.phamtecnologia.exceptions.EmailNaoEncontrado;
+import br.com.phamtecnologia.exceptions.*;
 import br.com.phamtecnologia.repositories.PerfilRepository;
 import br.com.phamtecnologia.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -59,7 +55,7 @@ public class UsuarioService {
 
         var perfil = perfilRepository.findByNome(request.perfil());
         if (perfil == null) {
-            throw new RuntimeException("Perfil não encontrado: " + request.perfil());
+            throw new PerfilNaoEncontradoException();
         }
 
         var usuario = new Usuario();
@@ -68,6 +64,7 @@ public class UsuarioService {
         usuario.setTelefone(request.telefone());
         usuario.setSenha(cryptoComponent.encrypt(request.senha()));
         usuario.setDataHoraCriacao(LocalDateTime.now());
+        usuario.setAtivo(true);
         usuario.setPerfil(perfil);
 
         String nomeArquivo = fotoPerfilComponent.salvarFotoPerfil(foto);
@@ -96,7 +93,7 @@ public class UsuarioService {
         var usuario = usuarioRepository.findByIdWithPerfil(id);
 
         if (usuario == null) {
-            throw new RuntimeException("Usuário não encontrado.");
+            throw new UsuarioNaoEncontradoException();
         }
 
         if (request.nome() != null)
@@ -124,8 +121,29 @@ public class UsuarioService {
                 usuario.getEmail()
         );
     }
+    public void deletar(UUID id) {
 
+        var usuario = usuarioRepository.findById(id)
+                .orElseThrow(UsuarioNaoEncontradoException::new);
 
+        usuario.setAtivo(false);
+
+        usuarioRepository.save(usuario);
+    }
+
+    public List<UsuarioResponse> consultar() {
+
+        var lista = usuarioRepository.findByUsuarioAtivo();
+
+        return lista.stream()
+                .map(usuario -> new UsuarioResponse(
+                        usuario.getId(),
+                        usuario.getNome(),
+                        usuario.getTelefone(),
+                        usuario.getEmail(),
+                        usuario.getPerfil().getNome()
+                )).toList();
+    }
 
     public AutenticarUsuarioResponse autenticar(AutenticarUsuarioRequest request) {
 

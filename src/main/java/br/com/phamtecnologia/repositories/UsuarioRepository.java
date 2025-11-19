@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -16,7 +17,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
                 u
             FROM
                 Usuario u
-            WHERE 
+            WHERE
                 u.email = :email
             """)
     Usuario findByEmail(@Param("email") String email);
@@ -26,7 +27,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
                 u
             FROM
                 Usuario u
-            JOIN 
+            JOIN
                 u.perfil p
             WHERE
                 u.email = :email
@@ -41,7 +42,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
                 u
              FROM
                 Usuario u
-             WHERE 
+             WHERE
                 u.telefone = :telefone
              """
     )
@@ -49,7 +50,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     @Query(
             """
-            SELECT 
+            SELECT
                 u
             FROM 
                 Usuario u
@@ -60,4 +61,20 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
             """
     )
     Usuario findByIdWithPerfil(@Param("id") UUID id);
+
+    @Query(
+            """
+            SELECT
+                u
+            FROM
+                Usuario u
+            JOIN
+                u.perfil p
+            WHERE
+                u.ativo = true
+            ORDER BY
+                u.nome
+            """
+    )
+    List<Usuario> findByUsuarioAtivo();
 }
