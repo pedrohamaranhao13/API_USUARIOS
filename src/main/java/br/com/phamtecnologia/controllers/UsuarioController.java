@@ -1,8 +1,10 @@
 package br.com.phamtecnologia.controllers;
 
+import br.com.phamtecnologia.dtos.requests.AtualizarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.AutenticarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.CriarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.RecuperarSenhaRequest;
+import br.com.phamtecnologia.dtos.responses.AtualizarUsuarioResponse;
 import br.com.phamtecnologia.exceptions.AcessoNegadoException;
 import br.com.phamtecnologia.exceptions.EmailJaCadastradoException;
 import br.com.phamtecnologia.exceptions.EmailNaoEncontrado;
@@ -13,7 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.util.UUID;
 
 
 @RestController
@@ -42,6 +45,24 @@ public class UsuarioController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @PutMapping(value = "atualizar/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> atualizar(
+            @PathVariable UUID id,
+            @RequestPart("request") String requestJson,
+            @RequestPart(name = "foto", required = false) MultipartFile foto) {
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            AtualizarUsuarioRequest request = mapper.readValue(requestJson, AtualizarUsuarioRequest.class);
+
+            return ResponseEntity.ok().body(usuarioService.atualizar(request, foto, id));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
 
     @PostMapping("autenticar")
     public ResponseEntity<?> autenticarUsuario(@RequestBody AutenticarUsuarioRequest request) {

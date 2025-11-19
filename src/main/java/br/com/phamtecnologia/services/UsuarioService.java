@@ -2,13 +2,17 @@ package br.com.phamtecnologia.services;
 
 import br.com.phamtecnologia.components.CryptoComponent;
 import br.com.phamtecnologia.components.EmailComponent;
+import br.com.phamtecnologia.components.FotoPerfilComponent;
 import br.com.phamtecnologia.components.JwtBearerComponent;
+import br.com.phamtecnologia.dtos.requests.AtualizarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.AutenticarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.CriarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.RecuperarSenhaRequest;
+import br.com.phamtecnologia.dtos.responses.AtualizarUsuarioResponse;
 import br.com.phamtecnologia.dtos.responses.AutenticarUsuarioResponse;
 import br.com.phamtecnologia.dtos.responses.CriarUsuarioResponse;
 import br.com.phamtecnologia.dtos.responses.RecuperarSenhaResponse;
+import br.com.phamtecnologia.entities.Perfil;
 import br.com.phamtecnologia.entities.Usuario;
 import br.com.phamtecnologia.exceptions.AcessoNegadoException;
 import br.com.phamtecnologia.exceptions.EmailJaCadastradoException;
@@ -44,6 +48,9 @@ public class UsuarioService {
     @Autowired
     private EmailComponent emailComponent;
 
+    @Autowired
+    private FotoPerfilComponent fotoPerfilComponent;
+
     public CriarUsuarioResponse criar(CriarUsuarioRequest request, MultipartFile foto) {
 
         if(usuarioRepository.findByEmail(request.email()) != null) {
@@ -63,21 +70,8 @@ public class UsuarioService {
         usuario.setDataHoraCriacao(LocalDateTime.now());
         usuario.setPerfil(perfil);
 
-        if (foto != null && !foto.isEmpty()) {
-            String destino = "C:/uploads/usuarios/";
-            File dir = new File(destino);
-            if (!dir.exists()) dir.mkdirs();
-
-            String nomeArquivo = UUID.randomUUID() + "_" + foto.getOriginalFilename();
-            Path caminho = Path.of(destino + nomeArquivo);
-
-            try {
-                Files.write(caminho, foto.getBytes());
-                usuario.setFoto(nomeArquivo);
-            } catch (IOException e) {
-                throw new RuntimeException("Erro ao salvar a foto do usuário.", e);
-            }
-
+        String nomeArquivo = fotoPerfilComponent.salvarFotoPerfil(foto);
+        if (nomeArquivo != null) {
             usuario.setFoto(nomeArquivo);
         }
 
@@ -91,8 +85,47 @@ public class UsuarioService {
                 usuario.getPerfil().getNome(),
                 usuario.getDataHoraCriacao(),
                 usuario.getFoto()
+
         );
     }
+
+    public AtualizarUsuarioResponse atualizar(AtualizarUsuarioRequest request,
+                                              MultipartFile foto,
+                                              UUID id) {
+
+        var usuario = usuarioRepository.findByIdWithPerfil(id);
+
+        if (usuario == null) {
+            throw new RuntimeException("Usuário não encontrado.");
+        }
+
+        if (request.nome() != null)
+            usuario.setNome(request.nome());
+
+        if (request.email() != null)
+            usuario.setEmail(request.email());
+
+        if (request.telefone() != null)
+            usuario.setTelefone(request.telefone());
+
+        if (request.senha() != null && !request.senha().isBlank())
+            usuario.setSenha(cryptoComponent.encrypt(request.senha()));
+
+        if (foto != null && !foto.isEmpty()) {
+            String nomeArquivo = fotoPerfilComponent.salvarFotoPerfil(foto);
+            usuario.setFoto(nomeArquivo);
+        }
+
+        usuarioRepository.save(usuario);
+
+        return new AtualizarUsuarioResponse(
+                usuario.getNome(),
+                usuario.getTelefone(),
+                usuario.getEmail()
+        );
+    }
+
+
 
     public AutenticarUsuarioResponse autenticar(AutenticarUsuarioRequest request) {
 

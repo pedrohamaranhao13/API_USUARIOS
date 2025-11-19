@@ -46,4 +46,18 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
              """
     )
     Usuario findByTelefone(@Param("telefone") String telefone);
+
+    @Query(
+            """
+            SELECT 
+                u
+            FROM 
+                Usuario u
+            JOIN 
+                u.perfil p
+            WHERE 
+                u.id = :id
+            """
+    )
+    Usuario findByIdWithPerfil(@Param("id") UUID id);
 }
