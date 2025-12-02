@@ -1,15 +1,10 @@
 package br.com.phamtecnologia.services;
 
 import br.com.phamtecnologia.components.CryptoComponent;
-import br.com.phamtecnologia.components.EmailComponent;
 import br.com.phamtecnologia.components.FotoPerfilComponent;
-import br.com.phamtecnologia.components.JwtBearerComponent;
 import br.com.phamtecnologia.dtos.requests.AtualizarUsuarioRequest;
-import br.com.phamtecnologia.dtos.requests.AutenticarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.CriarUsuarioRequest;
-import br.com.phamtecnologia.dtos.requests.RecuperarSenhaRequest;
 import br.com.phamtecnologia.dtos.responses.*;
-import br.com.phamtecnologia.entities.Perfil;
 import br.com.phamtecnologia.entities.Usuario;
 import br.com.phamtecnologia.exceptions.*;
 import br.com.phamtecnologia.repositories.PerfilRepository;
@@ -18,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -38,11 +30,6 @@ public class UsuarioService {
     @Autowired
     private CryptoComponent cryptoComponent;
 
-    @Autowired
-    private JwtBearerComponent jwtBearerComponent;
-
-    @Autowired
-    private EmailComponent emailComponent;
 
     @Autowired
     private FotoPerfilComponent fotoPerfilComponent;
@@ -108,6 +95,14 @@ public class UsuarioService {
         if (request.senha() != null && !request.senha().isBlank())
             usuario.setSenha(cryptoComponent.encrypt(request.senha()));
 
+        if (request.perfil() != null && !request.perfil().isBlank()) {
+            var perfil = perfilRepository.findByNome(request.perfil());
+            if (perfil == null) {
+                throw new PerfilNaoEncontradoException();
+            }
+            usuario.setPerfil(perfil);
+        }
+
         if (foto != null && !foto.isEmpty()) {
             String nomeArquivo = fotoPerfilComponent.salvarFotoPerfil(foto);
             usuario.setFoto(nomeArquivo);
@@ -145,52 +140,4 @@ public class UsuarioService {
                 )).toList();
     }
 
-    public AutenticarUsuarioResponse autenticar(AutenticarUsuarioRequest request) {
-
-        var usuario = usuarioRepository.findByEmailAndSenha(request.email(), cryptoComponent.encrypt(request.senha()));
-
-        if (usuario == null) {
-            throw new AcessoNegadoException();
-        }
-
-        return new AutenticarUsuarioResponse(
-                usuario.getId(),
-                usuario.getNome(),
-                usuario.getEmail(),
-                usuario.getPerfil().getNome(),
-                LocalDateTime.now(),
-                jwtBearerComponent.createToken(usuario.getEmail(), usuario.getPerfil().getNome())
-        );
-    }
-
-    public RecuperarSenhaResponse recuperar(RecuperarSenhaRequest request){
-
-        var usuario = (usuarioRepository.findByEmail(request.email()));
-
-        if (usuario == null){
-            throw new EmailNaoEncontrado();
-        }
-
-        var novaSenha = cryptoComponent.generateRandomPassword(8);
-
-        usuario.setSenha(cryptoComponent.encrypt(novaSenha));
-        usuarioRepository.save(usuario);
-
-        emailComponent.send(
-                usuario.getEmail(),
-                "Recuperação de Senha - PhamTecnologia",
-                """
-                Olá, sua nova senha é:
-    
-                """ + novaSenha + """
-
-            Recomendamos alterá-la após o login.
-            """
-        );
-
-
-        return new RecuperarSenhaResponse(
-                usuario.getEmail()
-        );
-    }
 }

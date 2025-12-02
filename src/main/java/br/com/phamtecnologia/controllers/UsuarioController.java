@@ -4,11 +4,11 @@ import br.com.phamtecnologia.dtos.requests.AtualizarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.AutenticarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.CriarUsuarioRequest;
 import br.com.phamtecnologia.dtos.requests.RecuperarSenhaRequest;
-import br.com.phamtecnologia.dtos.responses.AtualizarUsuarioResponse;
 import br.com.phamtecnologia.exceptions.AcessoNegadoException;
 import br.com.phamtecnologia.exceptions.EmailJaCadastradoException;
 import br.com.phamtecnologia.exceptions.EmailNaoEncontrado;
 import br.com.phamtecnologia.services.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -80,31 +80,7 @@ public class UsuarioController {
     }
 
 
-    @PostMapping("autenticar")
-    public ResponseEntity<?> autenticarUsuario(@RequestBody AutenticarUsuarioRequest request) {
 
-        try {
-            return ResponseEntity.ok().body(usuarioService.autenticar(request));
-        }
-        catch (AcessoNegadoException e) {
-            return  ResponseEntity.status(401).body(e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
 
-    @PostMapping("recuperar")
-    public ResponseEntity<?> recuperarSenha(@RequestBody RecuperarSenhaRequest request) {
 
-        try {
-            return ResponseEntity.ok().body(usuarioService.recuperar(request));
-        }
-        catch (EmailNaoEncontrado e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        }
-        catch (Exception e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
 }

@@ -2,6 +2,7 @@ package br.com.phamtecnologia.controllers;
 
 import br.com.phamtecnologia.dtos.requests.PerfilRequest;
 import br.com.phamtecnologia.services.PerfilService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,7 @@ public class PerfilController {
     private PerfilService perfilService;
 
     @PostMapping()
-    public ResponseEntity<?> criarPerfil(@RequestBody PerfilRequest request) {
+    public ResponseEntity<?> criarPerfil(@Valid @RequestBody PerfilRequest request) {
 
         return ResponseEntity.ok().body(perfilService.criar(request));
     }
